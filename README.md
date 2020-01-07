@@ -2,12 +2,15 @@
 Linux TCP Client Server code
 
 
-# build Server and Client :
+# To build on Linux: build Server and Client
 g++ server.cpp -o server
 
 g++ client.cpp -o client
 
-# run server first:
+# To build on Windows: build Client 
+Open the .sln file using VS 2015 or later and build using IDE
+
+# run server first.
 ./server 
 
 # get the IP address of the of the machine where server is running (server port is 12000). Use it as input to run the client. e.g:
