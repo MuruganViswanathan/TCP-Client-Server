@@ -7,9 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 
-//#include<sys/un.h> 
-//#include<netdb.h> 
-
+#define PORTNUM 12000
 int main()
 {
 
@@ -29,7 +27,7 @@ int main()
 	struct sockaddr_in my_addr;
 	my_addr.sin_family = AF_INET;
 	my_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	my_addr.sin_port = htons(12000);
+	my_addr.sin_port = htons(PORTNUM);
 
 	if(bind(server, (struct sockaddr*)&my_addr, sizeof(my_addr)) != 0)
 	{
@@ -49,7 +47,7 @@ int main()
 		return 1;
 	}
 	
-	printf("listening...\n");
+	printf("listening on port %d ...\n", PORTNUM);
 
 	//4. accept, send and receive data in while loop
 	//
