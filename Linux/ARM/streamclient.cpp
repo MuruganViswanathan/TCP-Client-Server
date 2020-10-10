@@ -1,3 +1,13 @@
+/*
+ * Description: Start a TCP Client to connect to a TCP Server at <ipaddress>.
+ * Receive packets from Server and do network performance profiling
+ *
+ * $DateTime: 2020/10/01 12:34:56 $
+ * $Revision: #1 $
+ *   $Author: murugan $
+ *
+ */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -9,25 +19,29 @@
 
 //#include<sys/un.h> 
 //#include<netdb.h> 
+#include <sys/time.h>
+//#include <time.h>
 
+#define PORTNUM 12000
 int main(int argc, char* argv[])
 {
 	//validate 
-	if(argc != 3)
+	if(argc != 2)
 	{
-		printf("Usage: %s <server IP addr> <server PORT number>\n", argv[0]);
+		printf("Usage: %s <server IP addr> \n", argv[0]);
 		return 1;
 	}
 
+
 	char ip[INET_ADDRSTRLEN];
 	strncpy(ip, argv[1], INET_ADDRSTRLEN);
-	unsigned short port = atoi(argv[2]);
+	unsigned short port = PORTNUM;//atoi(argv[2]);
 	printf("Connecting to server: %s, port %d\n", ip, port);
 	
     //0. Init
     //   create data buffer to receive data
     char* databuffer = 0;
-    const unsigned int DATASIZE = sizeof(char)*2*1024*1024;
+    const unsigned int DATASIZE = sizeof(char)*4*1024;
     databuffer = (char*) malloc (DATASIZE);
     if(databuffer == NULL)
     {
@@ -59,6 +73,7 @@ int main(int argc, char* argv[])
 	}
 	printf("bind successful...\n");
 
+
 	//3. connect to server
 	struct sockaddr_in serv_addr;
 	serv_addr.sin_family = AF_INET;
@@ -72,10 +87,19 @@ int main(int argc, char* argv[])
 	}
 	printf("server connected...\n");
 
-        //4. send and receive
-        //
-        static int i = 0;
-        while(1)
+
+    //4. receive N packets and calculate transfer rate
+    //
+	while(1)
+    {
+        static int i;
+        i = 0;
+        int N = 1000; //number of packets
+        unsigned long int bytes_received = 0;
+        struct timeval start, end;
+
+        gettimeofday(&start, NULL);
+        while(i < N)
         {
                 i++;
 
@@ -89,11 +113,36 @@ int main(int argc, char* argv[])
            //     recv(sockfd, buffer2, 256, 0);
            //     printf("RECEIVED FROM SERVER: %s\n", buffer2);
 
-                  int nsize = recv(sockfd, databuffer, DATASIZE, 0);
-                  printf("RECEIVED FROM SERVER: %d - %d bytes\n", i, nsize);
-       }
+                  bytes_received += recv(sockfd, databuffer, DATASIZE, 0);
+                  //printf("RECEIVED FROM SERVER: %d - %ld bytes\n", i, bytes_received);
+        }
+        gettimeofday(&end, NULL);
 
+        //if 0 bytes read continiously, terminate client
+        if(bytes_received == 0)
+        {
+            static int bcount = 0;
+            bcount++;
+            if(bcount == 5)
+            {
+                printf("Zero bytes received. check if server is running... exiting client.\n");
+                break;
+            }
+        }
 
+        long int totalusec = (end.tv_sec - start.tv_sec)*1000000 + (end.tv_usec - start.tv_usec);
+        double total_sec = ((double)totalusec)/1000000;
+
+        double rate = bytes_received/total_sec;
+        double rateMbps = (rate*8)/1000000;
+
+        printf("%ld bytes received in 0.3%f seconds. \t Transfer rate = 0.3%f bytes per sec ( %f Mbps )\n",
+               bytes_received, total_sec, rate, rateMbps);
+    }
+
+	//99. cleanup
+	//    free malloc
+	free(databuffer);
 	return 0;
 }
 

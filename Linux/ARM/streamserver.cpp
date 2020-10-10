@@ -1,3 +1,13 @@
+/*
+ * Description: Start a TCP Server.
+ * Send packets to client for network performance profiling
+ *
+ * $DateTime: 2020/10/01 12:34:56 $
+ * $Revision: #1 $
+ *   $Author: murugan $
+ *
+ */
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -10,18 +20,21 @@
 #define PORTNUM 12000
 int main()
 {
-    //0. Init
-    //   create data buffer to send
-    char* databuffer = 0;
-    const unsigned int DATASIZE = sizeof(char)*2*1024*1024;
-    databuffer = (char*) malloc (DATASIZE);
-    if(databuffer == NULL)
-    {
-        printf("Error: could not allocate memory of size: %u !\n", DATASIZE);
-        return 1;
-    }
-    // dummy - fill up memory
-    memset(databuffer, 1, DATASIZE);
+    	//0. Init
+    	//   create data buffer to send
+    	char* databuffer = 0;
+        //const unsigned int DATASIZE = sizeof(char)*20*1024*1024; //20MB
+        //const unsigned int DATASIZE = sizeof(char)*2*1024*1024; //2MB
+        const unsigned int DATASIZE = sizeof(char)*512*1024; //512KB
+        //const unsigned int DATASIZE = sizeof(char)*6*1024; // 6KB
+     	databuffer = (char*) malloc (DATASIZE);
+    	if(databuffer == NULL)
+    	{
+        	printf("Error: could not allocate memory of size: %u !\n", DATASIZE);
+        	return 1;
+    	}
+    	// dummy - fill up memory
+    	memset(databuffer, 1, DATASIZE);
 
 
 	//1. create socket
@@ -100,6 +113,10 @@ int main()
 		//	sleep(1);
 		}
 	}
+
+	//99. cleanup
+	//    free buffer
+	free(databuffer);
 
 	return 0;
 }
